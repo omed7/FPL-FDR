@@ -21,6 +21,9 @@ export const fetchFPLData = async () => {
       name: team.name,
       short_name: team.short_name,
       code: team.code,
+      strength_overall_home: team.strength_overall_home,
+      strength_overall_away: team.strength_overall_away,
+      strength: team.strength,
       logoUrl: `https://resources.premierleague.com/premierleague/badges/50/t${team.code}.png`,
     }));
 
