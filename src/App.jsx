@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { Settings, RefreshCw, AlertTriangle } from 'lucide-react';
 import { fetchFPLData } from './api';
 import SettingsModal from './components/SettingsModal';
-import FixtureModal from './components/FixtureModal';
 import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -30,20 +29,25 @@ function App() {
   const [sortOrder, setSortOrder] = useState(() => localStorage.getItem('sortOrder') || 'default');
   const [gwStart, setGwStart] = useState(() => Number(localStorage.getItem('gwStart')) || 1);
   const [gwEnd, setGwEnd] = useState(() => Number(localStorage.getItem('gwEnd')) || 38);
+  const [fdrOverrides, setFdrOverrides] = useState(() => {
+    const saved = localStorage.getItem("fdrOverrides");
+    return saved ? JSON.parse(saved) : {};
+  });
+
   const [hiddenTeams, setHiddenTeams] = useState(() => {
     const saved = localStorage.getItem('hiddenTeams');
     return saved ? JSON.parse(saved) : [];
   });
 
   // Modal State
-  const [selectedFixture, setSelectedFixture] = useState(null);
 
   useEffect(() => {
     localStorage.setItem('sortOrder', sortOrder);
     localStorage.setItem('gwStart', gwStart);
     localStorage.setItem('gwEnd', gwEnd);
     localStorage.setItem('hiddenTeams', JSON.stringify(hiddenTeams));
-  }, [sortOrder, gwStart, gwEnd, hiddenTeams]);
+    localStorage.setItem('fdrOverrides', JSON.stringify(fdrOverrides));
+  }, [sortOrder, gwStart, gwEnd, hiddenTeams, fdrOverrides]);
 
   useEffect(() => {
     loadData();
@@ -64,6 +68,7 @@ function App() {
 
       setData(result);
     } catch (err) {
+      console.error(err);
       setError("Failed to load FPL data. Please try again later.");
     } finally {
       setLoading(false);
@@ -103,7 +108,19 @@ function App() {
             const isHome = fixture.team_h === team.id;
             const opponentId = isHome ? fixture.team_a : fixture.team_h;
             const opponentTeam = data.teams.find(t => t.id === opponentId);
-            const fdr = isHome ? fixture.team_h_difficulty : fixture.team_a_difficulty;
+
+            let fdr;
+            if (fdrOverrides[opponentId]) {
+              // The difficulty of the fixture depends on how strong the opponent is.
+              // If we are Home, the opponent is Away, so we check their Away override.
+              const override = isHome ? fdrOverrides[opponentId].a : fdrOverrides[opponentId].h;
+              if (override) {
+                fdr = Number(override);
+              }
+            }
+            if (fdr === undefined) {
+              fdr = isHome ? fixture.team_h_difficulty : fixture.team_a_difficulty;
+            }
 
             totalFDR += fdr;
             fixtureCount++;
@@ -148,7 +165,7 @@ function App() {
       teams: processedTeams,
       events: visibleEvents
     };
-  }, [data, gwStart, gwEnd, hiddenTeams, sortOrder]);
+  }, [data, gwStart, gwEnd, hiddenTeams, sortOrder, fdrOverrides]);
 
   if (loading) {
     return (
@@ -211,13 +228,13 @@ function App() {
             <table className="w-full text-sm text-left border-collapse">
 
               {/* Table Head */}
-              <thead className="text-xs text-gray-400 uppercase bg-gray-900/90 backdrop-blur-xl sticky top-0 z-20">
+              <thead className="text-[10px] text-gray-400 uppercase bg-gray-900/90 backdrop-blur-xl sticky top-0 z-20">
                 <tr>
-                  <th scope="col" className="px-6 py-5 font-bold tracking-wider sticky left-0 z-30 bg-gray-900/90 backdrop-blur-xl border-b border-gray-800 min-w-[200px] shadow-[4px_0_12px_rgba(0,0,0,0.5)]">
+                  <th scope="col" className="px-3 py-2 font-bold tracking-wider sticky left-0 z-30 bg-gray-900/90 backdrop-blur-xl border-b border-gray-800 min-w-[120px] shadow-[4px_0_12px_rgba(0,0,0,0.5)]">
                     Team & Avg FDR
                   </th>
                   {processedData.events.map(event => (
-                    <th key={event.id} scope="col" className="px-4 py-5 text-center font-bold tracking-wider border-b border-gray-800 min-w-[120px]">
+                    <th key={event.id} scope="col" className="px-2 py-2 text-center font-bold tracking-wider border-b border-gray-800 min-w-[60px]">
                       GW {event.id}
                     </th>
                   ))}
@@ -226,25 +243,25 @@ function App() {
 
               {/* Table Body */}
               <tbody className="divide-y divide-gray-800/50">
-                {processedData.teams.map((team, idx) => (
+                {processedData.teams.map((team) => (
                   <tr key={team.id} className="hover:bg-gray-800/80 transition-colors group">
 
                     {/* Sticky Left Column */}
-                    <td className="px-6 py-4 whitespace-nowrap sticky left-0 z-10 bg-gray-800/95 group-hover:bg-gray-700/95 backdrop-blur-md border-r border-gray-800/50 shadow-[4px_0_12px_rgba(0,0,0,0.3)] transition-colors">
+                    <td className="px-3 py-2 whitespace-nowrap sticky left-0 z-10 bg-gray-800/95 group-hover:bg-gray-700/95 backdrop-blur-md border-r border-gray-800/50 shadow-[4px_0_12px_rgba(0,0,0,0.3)] transition-colors">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2">
                           <img
                             src={team.logoUrl}
                             alt={team.name}
-                            className="w-10 h-10 object-contain drop-shadow-md"
+                            className="w-6 h-6 object-contain drop-shadow-md"
                             loading="lazy"
                           />
                           <div className="flex flex-col">
-                            <span className="font-bold text-gray-100 text-base">{team.short_name}</span>
-                            <span className="text-xs text-gray-500 font-medium">{team.name}</span>
+                            <span className="font-bold text-gray-100 text-sm">{team.short_name}</span>
+                            <span className="text-[10px] text-gray-500 font-medium leading-none">{team.name}</span>
                           </div>
                         </div>
-                        <div className="ml-4 px-2.5 py-1 bg-gray-900 rounded-lg border border-gray-700 text-xs font-mono font-bold text-gray-300 shadow-inner">
+                        <div className="ml-2 px-1.5 py-0.5 bg-gray-900 rounded border border-gray-700 text-[10px] font-mono font-bold text-gray-300 shadow-inner">
                           {team.avgFDR}
                         </div>
                       </div>
@@ -252,32 +269,31 @@ function App() {
 
                     {/* Gameweek Columns */}
                     {team.teamFixtures.map((gw, i) => (
-                      <td key={`${team.id}-${gw.eventId}-${i}`} className="px-2 py-4 align-middle">
-                        <div className="flex flex-col items-center justify-center gap-1.5 h-full min-h-[60px]">
+                      <td key={`${team.id}-${gw.eventId}-${i}`} className="px-1 py-1 align-middle">
+                        <div className="flex flex-col items-center justify-center gap-1 h-full min-h-[40px]">
                           {gw.isBlank ? (
-                            <span className="text-gray-600 text-xs font-medium italic bg-gray-900/50 px-3 py-1 rounded-md border border-gray-800">
+                            <span className="text-gray-600 text-[10px] font-medium italic bg-gray-900/50 px-2 py-0.5 rounded border border-gray-800">
                               Blank
                             </span>
                           ) : (
                             gw.fixtures.map((fixture) => (
-                              <button
+                              <div
                                 key={fixture.id}
-                                onClick={() => setSelectedFixture(fixture)}
                                 className={cn(
-                                  "w-full max-w-[110px] px-2 py-2 rounded-xl flex flex-col items-center justify-center transition-transform hover:scale-105 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-white/50 active:scale-95",
+                                  "w-full max-w-[80px] px-1 py-1 rounded-md flex flex-col items-center justify-center",
                                   FDR_COLORS[fixture.fdr] || 'bg-gray-700 text-gray-300'
                                 )}
                               >
-                                <span className="text-[13px] font-black tracking-tight leading-none mb-1">
+                                <span className="text-xs font-black tracking-tight leading-none mb-0.5">
                                   {fixture.opponentTeam?.short_name || 'TBD'}
-                                  <span className="text-[10px] font-medium opacity-80 ml-1">
+                                  <span className="text-[9px] font-medium opacity-80 ml-1">
                                     ({fixture.isHome ? 'H' : 'A'})
                                   </span>
                                 </span>
-                                <span className="text-[10px] font-bold opacity-90 border-t border-current/20 pt-1 w-full text-center">
+                                <span className="text-[9px] font-bold opacity-90 border-t border-current/20 pt-0.5 w-full text-center">
                                   FDR {fixture.fdr}
                                 </span>
-                              </button>
+                              </div>
                             ))
                           )}
                         </div>
@@ -305,12 +321,8 @@ function App() {
         hiddenTeams={hiddenTeams}
         toggleTeamVisibility={toggleTeamVisibility}
         teams={data.teams}
-      />
-
-      <FixtureModal
-        isOpen={!!selectedFixture}
-        onClose={() => setSelectedFixture(null)}
-        fixtureData={selectedFixture}
+        fdrOverrides={fdrOverrides}
+        setFdrOverrides={setFdrOverrides}
       />
 
     </div>

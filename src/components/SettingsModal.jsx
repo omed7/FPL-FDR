@@ -13,7 +13,8 @@ export default function SettingsModal({
   hiddenTeams,
   toggleTeamVisibility,
   teams,
-  events,
+  fdrOverrides,
+  setFdrOverrides,
 }) {
   if (!isOpen) return null;
 
@@ -96,6 +97,78 @@ export default function SettingsModal({
                   <img src={team.logoUrl} alt={team.short_name} className="w-5 h-5" />
                   <span className="text-sm text-gray-200">{team.name}</span>
                 </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Team Strengths Overrides */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-sm font-medium text-gray-300">Team Strengths</label>
+              <button
+                onClick={() => setFdrOverrides({})}
+                className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded transition-colors"
+              >
+                Reset to Default
+              </button>
+            </div>
+            <div className="bg-gray-900 border border-gray-700 rounded-lg p-2 max-h-48 overflow-y-auto space-y-2">
+              <div className="flex items-center justify-end px-2 text-[10px] text-gray-400 uppercase tracking-wider mb-1">
+                <div className="w-12 text-center mr-2">Home</div>
+                <div className="w-12 text-center">Away</div>
+              </div>
+              {teams.map(team => (
+                <div key={team.id} className="flex items-center justify-between p-2 hover:bg-gray-800 rounded">
+                  <div className="flex items-center space-x-2">
+                    <img src={team.logoUrl} alt={team.short_name} className="w-5 h-5" />
+                    <span className="text-xs text-gray-200">{team.name}</span>
+                  </div>
+                  <div className="flex space-x-2">
+                    <select
+                      value={fdrOverrides[team.id]?.h || team.strength || ''}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFdrOverrides(prev => {
+                          const updated = { ...prev };
+                          if (!updated[team.id]) updated[team.id] = {};
+                          if (val === '') {
+                            delete updated[team.id].h;
+                            if (Object.keys(updated[team.id]).length === 0) delete updated[team.id];
+                          } else {
+                            updated[team.id].h = Number(val);
+                          }
+                          return updated;
+                        });
+                      }}
+                      className="w-12 bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500 text-center"
+                    >
+                      <option value="">-</option>
+                      {[1, 2, 3, 4, 5, 6, 7].map(n => <option key={n} value={n}>{n}</option>)}
+                    </select>
+
+                    <select
+                      value={fdrOverrides[team.id]?.a || team.strength || ''}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFdrOverrides(prev => {
+                          const updated = { ...prev };
+                          if (!updated[team.id]) updated[team.id] = {};
+                          if (val === '') {
+                            delete updated[team.id].a;
+                            if (Object.keys(updated[team.id]).length === 0) delete updated[team.id];
+                          } else {
+                            updated[team.id].a = Number(val);
+                          }
+                          return updated;
+                        });
+                      }}
+                      className="w-12 bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500 text-center"
+                    >
+                      <option value="">-</option>
+                      {[1, 2, 3, 4, 5, 6, 7].map(n => <option key={n} value={n}>{n}</option>)}
+                    </select>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
