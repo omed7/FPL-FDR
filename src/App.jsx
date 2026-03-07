@@ -6,13 +6,13 @@ import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 const FDR_COLORS = {
-  1: 'bg-green-700 text-white shadow-[0_0_10px_rgba(21,128,61,0.5)]',
-  2: 'bg-green-400 text-green-900 shadow-[0_0_10px_rgba(74,222,128,0.5)]',
-  3: 'bg-gray-400 text-gray-900 shadow-[0_0_10px_rgba(156,163,175,0.5)]',
-  4: 'bg-red-400 text-red-900 shadow-[0_0_10px_rgba(248,113,113,0.5)]',
-  5: 'bg-red-500 text-white shadow-[0_0_10px_rgba(239,68,68,0.5)]',
-  6: 'bg-red-700 text-white shadow-[0_0_10px_rgba(185,28,28,0.5)]',
-  7: 'bg-red-900 text-white shadow-[0_0_10px_rgba(127,29,29,0.5)]',
+  1: 'bg-green-700 shadow-[0_0_10px_rgba(21,128,61,0.5)]',
+  2: 'bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]',
+  3: 'bg-gray-400 shadow-[0_0_10px_rgba(156,163,175,0.5)]',
+  4: 'bg-red-400 shadow-[0_0_10px_rgba(248,113,113,0.5)]',
+  5: 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]',
+  6: 'bg-red-700 shadow-[0_0_10px_rgba(185,28,28,0.5)]',
+  7: 'bg-red-900 shadow-[0_0_10px_rgba(127,29,29,0.5)]',
 };
 
 function cn(...inputs) {
@@ -81,6 +81,17 @@ function App() {
         ? prev.filter(id => id !== teamId)
         : [...prev, teamId]
     );
+  };
+
+  const handleLookahead = (count) => {
+    if (count === 'all') {
+      setGwEnd(38);
+    } else {
+      setGwEnd(Math.min(gwStart + count - 1, 38));
+    }
+    if (sortOrder !== 'easiest') {
+      setSortOrder('easiest');
+    }
   };
 
   // Process data for the grid
@@ -169,7 +180,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
           <RefreshCw className="w-12 h-12 text-blue-500 animate-spin" />
           <h2 className="text-xl font-semibold text-gray-200">Loading FPL Data...</h2>
@@ -180,8 +191,8 @@ function App() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-        <div className="bg-gray-800 p-8 rounded-2xl shadow-2xl border border-red-500/30 flex flex-col items-center max-w-md text-center space-y-4">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+        <div className="bg-slate-900 p-8 rounded-2xl shadow-2xl border border-red-500/30 flex flex-col items-center max-w-md text-center space-y-4">
           <AlertTriangle className="w-16 h-16 text-red-500" />
           <h2 className="text-2xl font-bold text-white">Oops!</h2>
           <p className="text-gray-400">{error}</p>
@@ -197,10 +208,10 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 font-sans selection:bg-blue-500/30">
+    <div className="min-h-screen bg-slate-950 text-gray-100 font-sans selection:bg-blue-500/30">
 
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-gray-900/80 backdrop-blur-xl border-b border-gray-800 shadow-sm">
+      <header className="sticky top-0 z-30 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800 shadow-sm">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
@@ -212,7 +223,7 @@ function App() {
           </div>
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="p-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-white transition-all hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-gray-300 hover:text-white transition-all hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             aria-label="Settings"
           >
             <Settings size={20} />
@@ -223,18 +234,26 @@ function App() {
       {/* Main Content Area */}
       <main className="max-w-[1920px] mx-auto p-4 sm:p-6 lg:p-8">
 
-        <div className="bg-gray-800/50 backdrop-blur-md rounded-3xl border border-gray-700/50 shadow-2xl overflow-hidden relative">
+        {/* Lookahead Filter */}
+        <div className="mb-4 flex space-x-2">
+          <button onClick={() => handleLookahead('all')} className="px-3 py-1.5 text-xs font-semibold rounded-md bg-slate-900 border border-slate-800 text-gray-300 hover:bg-slate-800 transition-colors">All</button>
+          <button onClick={() => handleLookahead(3)} className="px-3 py-1.5 text-xs font-semibold rounded-md bg-slate-900 border border-slate-800 text-gray-300 hover:bg-slate-800 transition-colors">Next 3</button>
+          <button onClick={() => handleLookahead(5)} className="px-3 py-1.5 text-xs font-semibold rounded-md bg-slate-900 border border-slate-800 text-gray-300 hover:bg-slate-800 transition-colors">Next 5</button>
+          <button onClick={() => handleLookahead(8)} className="px-3 py-1.5 text-xs font-semibold rounded-md bg-slate-900 border border-slate-800 text-gray-300 hover:bg-slate-800 transition-colors">Next 8</button>
+        </div>
+
+        <div className="bg-slate-900/50 backdrop-blur-md rounded-3xl border border-slate-800/50 shadow-2xl overflow-hidden relative">
           <div className="overflow-x-auto pb-4 custom-scrollbar">
             <table className="w-full text-sm text-left border-collapse">
 
               {/* Table Head */}
-              <thead className="text-[10px] text-gray-400 uppercase bg-gray-900/90 backdrop-blur-xl sticky top-0 z-20">
+              <thead className="text-[10px] text-gray-400 uppercase bg-slate-950/90 backdrop-blur-xl sticky top-0 z-20">
                 <tr>
-                  <th scope="col" className="px-3 py-2 font-bold tracking-wider sticky left-0 z-30 bg-gray-900/90 backdrop-blur-xl border-b border-gray-800 min-w-[120px] shadow-[4px_0_12px_rgba(0,0,0,0.5)]">
-                    Team & Avg FDR
+                  <th scope="col" className="px-2 py-2 font-bold tracking-wider sticky left-0 z-30 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800 min-w-[80px] shadow-[4px_0_12px_rgba(0,0,0,0.5)]">
+                    Team
                   </th>
                   {processedData.events.map(event => (
-                    <th key={event.id} scope="col" className="px-2 py-2 text-center font-bold tracking-wider border-b border-gray-800 min-w-[60px]">
+                    <th key={event.id} scope="col" className="px-0 py-2 text-center font-bold tracking-wider border-b border-slate-800 w-14">
                       GW {event.id}
                     </th>
                   ))}
@@ -242,12 +261,12 @@ function App() {
               </thead>
 
               {/* Table Body */}
-              <tbody className="divide-y divide-gray-800/50">
+              <tbody className="divide-y divide-slate-800">
                 {processedData.teams.map((team) => (
-                  <tr key={team.id} className="hover:bg-gray-800/80 transition-colors group">
+                  <tr key={team.id} className="hover:bg-slate-900/80 transition-colors group">
 
                     {/* Sticky Left Column */}
-                    <td className="px-3 py-2 whitespace-nowrap sticky left-0 z-10 bg-gray-800/95 group-hover:bg-gray-700/95 backdrop-blur-md border-r border-gray-800/50 shadow-[4px_0_12px_rgba(0,0,0,0.3)] transition-colors">
+                    <td className="px-2 py-2 whitespace-nowrap sticky left-0 z-10 bg-slate-950 group-hover:bg-slate-900 backdrop-blur-md border-r border-slate-800 shadow-[4px_0_12px_rgba(0,0,0,0.3)] transition-colors">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
                           <img
@@ -256,12 +275,9 @@ function App() {
                             className="w-6 h-6 object-contain drop-shadow-md"
                             loading="lazy"
                           />
-                          <div className="flex flex-col">
-                            <span className="font-bold text-gray-100 text-sm">{team.short_name}</span>
-                            <span className="text-[10px] text-gray-500 font-medium leading-none">{team.name}</span>
-                          </div>
+                          <span className="font-bold text-gray-100 text-xs hidden sm:inline-block">{team.short_name}</span>
                         </div>
-                        <div className="ml-2 px-1.5 py-0.5 bg-gray-900 rounded border border-gray-700 text-[10px] font-mono font-bold text-gray-300 shadow-inner">
+                        <div className="ml-1 px-1 py-0.5 bg-slate-900 rounded border border-slate-700 text-[10px] font-mono font-bold text-gray-300 shadow-inner">
                           {team.avgFDR}
                         </div>
                       </div>
@@ -269,32 +285,37 @@ function App() {
 
                     {/* Gameweek Columns */}
                     {team.teamFixtures.map((gw, i) => (
-                      <td key={`${team.id}-${gw.eventId}-${i}`} className="px-1 py-1 align-middle">
-                        <div className="flex flex-col items-center justify-center gap-1 h-full min-h-[40px]">
+                      <td key={`${team.id}-${gw.eventId}-${i}`} className="p-0 align-middle border-r border-slate-800 last:border-r-0">
+                        <div className="w-14 h-14 mx-auto flex flex-col items-center justify-center p-0.5">
                           {gw.isBlank ? (
-                            <span className="text-gray-600 text-[10px] font-medium italic bg-gray-900/50 px-2 py-0.5 rounded border border-gray-800">
-                              Blank
-                            </span>
+                            <div className="w-full h-full bg-black flex items-center justify-center border border-slate-800">
+                              <span className="text-gray-600 text-[10px] font-black uppercase">
+                                Blank
+                              </span>
+                            </div>
                           ) : (
-                            gw.fixtures.map((fixture) => (
-                              <div
-                                key={fixture.id}
-                                className={cn(
-                                  "w-full max-w-[80px] px-1 py-1 rounded-md flex flex-col items-center justify-center",
-                                  FDR_COLORS[fixture.fdr] || 'bg-gray-700 text-gray-300'
-                                )}
-                              >
-                                <span className="text-xs font-black tracking-tight leading-none mb-0.5">
-                                  {fixture.opponentTeam?.short_name || 'TBD'}
-                                  <span className="text-[9px] font-medium opacity-80 ml-1">
+                            <div className={cn(
+                              "w-full h-full flex flex-col items-center justify-center border border-slate-800",
+                              gw.fixtures.length > 1 ? "ring-2 ring-yellow-400 ring-inset" : ""
+                            )}>
+                              {gw.fixtures.map((fixture) => (
+                                <div
+                                  key={fixture.id}
+                                  className={cn(
+                                    "flex-1 w-full flex flex-col items-center justify-center",
+                                    FDR_COLORS[fixture.fdr] || 'bg-slate-800',
+                                    fixture.isHome ? 'text-white font-bold' : 'text-gray-200 italic font-medium'
+                                  )}
+                                >
+                                  <span className="text-[10px] sm:text-xs tracking-tight leading-none">
+                                    {fixture.opponentTeam?.short_name || 'TBD'}
+                                  </span>
+                                  <span className="text-[8px] opacity-80 mt-0.5">
                                     ({fixture.isHome ? 'H' : 'A'})
                                   </span>
-                                </span>
-                                <span className="text-[9px] font-bold opacity-90 border-t border-current/20 pt-0.5 w-full text-center">
-                                  FDR {fixture.fdr}
-                                </span>
-                              </div>
-                            ))
+                                </div>
+                              ))}
+                            </div>
                           )}
                         </div>
                       </td>
