@@ -6,13 +6,17 @@ import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 const FDR_COLORS = {
-  1: 'bg-green-700 shadow-[0_0_10px_rgba(21,128,61,0.5)]',
-  2: 'bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]',
-  3: 'bg-gray-400 shadow-[0_0_10px_rgba(156,163,175,0.5)]',
-  4: 'bg-red-400 shadow-[0_0_10px_rgba(248,113,113,0.5)]',
-  5: 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]',
-  6: 'bg-red-700 shadow-[0_0_10px_rgba(185,28,28,0.5)]',
-  7: 'bg-red-900 shadow-[0_0_10px_rgba(127,29,29,0.5)]',
+  1: 'bg-[#016D2F]',
+  2: 'bg-[#1E9A45]',
+  3: 'bg-[#62C051]',
+  4: 'bg-[#A3D869]',
+  5: 'bg-[#E1F296]',
+  6: 'bg-[#FFFFFF] text-black',
+  7: 'bg-[#FBD176]',
+  8: 'bg-[#FA9C56]',
+  9: 'bg-[#F47137]',
+  10: 'bg-[#DB2726]',
+  11: 'bg-[#900613]',
 };
 
 function cn(...inputs) {
@@ -130,7 +134,10 @@ function App() {
               }
             }
             if (fdr === undefined) {
-              fdr = isHome ? fixture.team_h_difficulty : fixture.team_a_difficulty;
+              const baseFdr = isHome ? fixture.team_h_difficulty : fixture.team_a_difficulty;
+              // Map FPL 1-5 scale to our 1-11 scale
+              const fdrMap = { 1: 1, 2: 3, 3: 6, 4: 9, 5: 11 };
+              fdr = fdrMap[baseFdr] || 6;
             }
 
             totalFDR += fdr;
@@ -253,7 +260,7 @@ function App() {
                     Team
                   </th>
                   {processedData.events.map(event => (
-                    <th key={event.id} scope="col" className="px-0 py-2 text-center font-bold tracking-wider border-b border-slate-800 w-14">
+                    <th key={event.id} scope="col" className="px-0 py-2 text-center font-bold tracking-wider border-b border-slate-800 w-12">
                       GW {event.id}
                     </th>
                   ))}
@@ -263,10 +270,10 @@ function App() {
               {/* Table Body */}
               <tbody className="divide-y divide-slate-800">
                 {processedData.teams.map((team) => (
-                  <tr key={team.id} className="hover:bg-slate-900/80 transition-colors group">
+                  <tr key={team.id} className="transition-colors group">
 
                     {/* Sticky Left Column */}
-                    <td className="px-2 py-2 whitespace-nowrap sticky left-0 z-10 bg-slate-950 group-hover:bg-slate-900 backdrop-blur-md border-r border-slate-800 shadow-[4px_0_12px_rgba(0,0,0,0.3)] transition-colors">
+                    <td className="px-2 py-2 whitespace-nowrap sticky left-0 z-10 bg-slate-950 backdrop-blur-md border-r border-slate-800 shadow-[4px_0_12px_rgba(0,0,0,0.3)]">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
                           <img
@@ -286,16 +293,16 @@ function App() {
                     {/* Gameweek Columns */}
                     {team.teamFixtures.map((gw, i) => (
                       <td key={`${team.id}-${gw.eventId}-${i}`} className="p-0 align-middle border-r border-slate-800 last:border-r-0">
-                        <div className="w-14 h-14 mx-auto flex flex-col items-center justify-center p-0.5">
+                        <div className="w-12 h-12 mx-auto flex flex-col items-center justify-center p-0">
                           {gw.isBlank ? (
-                            <div className="w-full h-full bg-black flex items-center justify-center border border-slate-800">
+                            <div className="w-full h-full bg-black flex items-center justify-center">
                               <span className="text-gray-600 text-[10px] font-black uppercase">
                                 Blank
                               </span>
                             </div>
                           ) : (
                             <div className={cn(
-                              "w-full h-full flex flex-col items-center justify-center border border-slate-800",
+                              "w-full h-full flex flex-col items-center justify-center",
                               gw.fixtures.length > 1 ? "ring-2 ring-yellow-400 ring-inset" : ""
                             )}>
                               {gw.fixtures.map((fixture) => (
@@ -304,10 +311,12 @@ function App() {
                                   className={cn(
                                     "flex-1 w-full flex flex-col items-center justify-center",
                                     FDR_COLORS[fixture.fdr] || 'bg-slate-800',
-                                    fixture.isHome ? 'text-white font-bold' : 'text-gray-200 italic font-medium'
+                                    fixture.isHome ? 'font-bold' : 'italic font-medium',
+                                    !fixture.isHome && fixture.fdr !== 6 && 'text-gray-300/80 drop-shadow-md',
+                                    fixture.isHome && fixture.fdr !== 6 && 'text-white drop-shadow-md'
                                   )}
                                 >
-                                  <span className="text-[10px] sm:text-xs tracking-tight leading-none">
+                                  <span className="text-[10px] sm:text-[10px] tracking-tight leading-none">
                                     {fixture.opponentTeam?.short_name || 'TBD'}
                                   </span>
                                   <span className="text-[8px] opacity-80 mt-0.5">
